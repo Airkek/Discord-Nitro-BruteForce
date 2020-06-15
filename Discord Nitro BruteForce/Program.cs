@@ -20,6 +20,7 @@ namespace Discord_Nitro_BruteForce
         static bool work = false;
         static string[] proxies;
         static int proxyType;
+        static bool verbose = false;
         
 
         [STAThread]
@@ -29,8 +30,22 @@ namespace Discord_Nitro_BruteForce
             Thread counter = new Thread(new ThreadStart(setTitle));
             counter.Start();
 
+            int threads;
+
+            Console.Write("Enter count of threads: ");
+            try
+            {
+                threads = Convert.ToInt32(Console.ReadLine().Trim());
+            }
+            catch
+            {
+                Console.WriteLine("Unknown threads count. Using 100");
+                threads = 100;
+            }
+
             while (true)
             {
+
                 Console.WriteLine("Select proxy type:\r\n1. Http/s\r\n2. Socks4\r\n3. Socks5");
                 Console.Write("Your choice: ");
                 ConsoleKey k = Console.ReadKey().Key;
@@ -56,20 +71,6 @@ namespace Discord_Nitro_BruteForce
                 Console.Clear();
             }
 
-            int threads;
-
-            Console.Write("Enter count of threads: ");
-            string _threads = Console.ReadLine().Trim();
-            if (_threads != "")
-            {
-                threads = Convert.ToInt32(_threads);
-            }
-            else
-            {
-                Console.WriteLine("Unknown threads count. Using 100");
-                threads = 100;
-            }
-
             Console.WriteLine("Open file with proxy list");
 
             OpenFileDialog dialog = new OpenFileDialog();
@@ -84,6 +85,11 @@ namespace Discord_Nitro_BruteForce
 
             proxies = File.ReadAllLines(proxyPath);
             Console.WriteLine($"Loaded {proxies.Length} proxies");
+
+            Console.Write("Use verbose mode? (y/n): ");
+            if (Console.ReadLine().ToLower().Trim() == "y")
+                verbose = true;
+            
             work = true;
 
             for (int i = 0; i < threads; i++)
@@ -149,11 +155,15 @@ namespace Discord_Nitro_BruteForce
                     if (e.Status == HttpExceptionStatus.ConnectFailure || e.HttpStatusCode != HttpStatusCode.NotFound)
                     {
                         err++;
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        if (e.Status == HttpExceptionStatus.ConnectFailure)
-                            Console.WriteLine($"[ERR] {code}");
-                        else
-                            Console.WriteLine($"[RATELIMIT] {code}");
+                        if (verbose)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            if (e.Status == HttpExceptionStatus.ConnectFailure)
+                                Console.WriteLine($"[ERR] {code}");
+                            else
+                                Console.WriteLine($"[RATELIMIT] {code}");
+                        }
+                            
                         Worker(code);
                         return;
                     }
