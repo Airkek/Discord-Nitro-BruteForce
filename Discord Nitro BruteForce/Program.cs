@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Newtonsoft.Json.Linq;
 using xNet;
 
 namespace Discord_Nitro_BruteForce
@@ -121,7 +120,6 @@ namespace Discord_Nitro_BruteForce
 
                     ch++;
                     //Console.WriteLine(res);
-                    JObject o = JObject.Parse(res);
 
                         
                     Console.ForegroundColor = ConsoleColor.Green;
