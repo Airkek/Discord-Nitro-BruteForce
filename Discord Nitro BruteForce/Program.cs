@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using xNet;
+using Leaf.xNet;
 
 namespace Discord_Nitro_BruteForce
 {
@@ -92,30 +92,49 @@ namespace Discord_Nitro_BruteForce
             
             work = true;
 
+            List<Thread> workers = new List<Thread>();
+
             for (int i = 0; i < threads; i++)
             {
-                Thread t = new Thread(new ThreadStart(Worker));
+                Thread t = new Thread(Worker);
                 t.Start();
+                workers.Add(t);
             }
-                
 
+            while (true)
+            {
+                if (Console.ReadLine().Trim().ToLower() == "stop")
+                {
+                    Console.WriteLine("Stopping threads...");
+                    work = false;
+                    foreach(Thread t in workers)
+                    {
+                        t.Join();
+                    }
+                    break;
+                }
+            }
+
+            Console.WriteLine("All threads stopped!");
             Console.ReadKey();
         }
 
 
-        static void Worker()
+        static void Worker(object s)
         {
             Worker("");
         }
         static void Worker(string code)
         {
+            if (!work)
+                return;
             try
             {
                 ProxyClient proxy = getNewProxy();
 
                 if(code == "")
                     code = GenerateCode();
-                HttpRequest request = new HttpRequest();//.Create();
+                HttpRequest request = new HttpRequest();
                 request.ConnectTimeout = 10000;
                 request.Proxy = proxy;
 
@@ -125,9 +144,7 @@ namespace Discord_Nitro_BruteForce
                     String res = response.ToString();
 
                     ch++;
-                    //Console.WriteLine(res);
 
-                        
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"[+] {code}");
                     Console.WriteLine(res);
@@ -148,10 +165,8 @@ namespace Discord_Nitro_BruteForce
 
                     Thread.Sleep(1000);
                 }
-                catch (xNet.HttpException e)
-                {
-                    //Console.WriteLine(e.Status);
-                    
+                catch (HttpException e)
+                {                   
                     if (e.Status == HttpExceptionStatus.ConnectFailure || e.HttpStatusCode != HttpStatusCode.NotFound)
                     {
                         err++;
@@ -219,10 +234,10 @@ namespace Discord_Nitro_BruteForce
                 string text = "idle";
                 if (work)
                 {
-                    text = $"work Checked: {ch}, Hits: {lenGoods}";
+                    text = $"work Checked: {ch}, Hits: {lenGoods}, Errors: {err}";
                 }
 
-                Console.Title = $"Discord Nitro - {text}";
+                Console.Title = $"DNBF - {text}";
             }
         }
     }
