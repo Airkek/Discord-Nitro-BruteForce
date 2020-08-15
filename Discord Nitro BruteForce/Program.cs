@@ -30,8 +30,6 @@ namespace Discord_Nitro_BruteForce
         static string email;
         static string smtpserver;
 
-        static string loginpath;
-
         [STAThread]
         static void Main(string[] args)
         {
@@ -95,23 +93,21 @@ namespace Discord_Nitro_BruteForce
             proxies = new ProxyQueue(File.ReadAllLines(proxyPath));
             Console.WriteLine($"Loaded {proxies.Length} proxies");
 
-            Console.Write("Use email notification? (y/n)");
+            Console.Write("Use email notification? (y/n): ");
             if (Console.ReadLine().ToLower().Trim() == "y")
             {
                 emailnotification = true;
 
-                Console.Write("Enter file path? (y/n)");
-                if (Console.ReadLine().ToLower().Trim() == "y")
+                bool cfgLoad = false;
+
+                if (File.Exists("email.cfg"))
                 {
-                    dialog.Filter = "Auth file (*.txt)|*.txt";
+                    Console.Write("Use saved email config? (y/n): ");
+                    cfgLoad = Console.ReadLine().ToLower().Trim() == "y";
+                }
 
-                    if (dialog.ShowDialog() != DialogResult.OK)
-                    {
-                        return;
-                    }
-
-                    loginpath = dialog.FileName;
-
+                if (cfgLoad)
+                {
                     LoginParse();
                     
                     Console.WriteLine("File loaded!");
@@ -130,6 +126,8 @@ namespace Discord_Nitro_BruteForce
                     myemail = Console.ReadLine();
                     Console.WriteLine("Enter target email: ");
                     email = Console.ReadLine();
+
+                    File.WriteAllText("email.cfg", string.Join("\r\n", new[] { username, password, email, myemail, smtpserver }));
                 }
             }
 
@@ -246,7 +244,7 @@ namespace Discord_Nitro_BruteForce
 
         static void LoginParse()
         {
-            var lines = File.ReadAllLines(loginpath);
+            var lines = File.ReadAllLines("email.cfg");
 
             try
             {
@@ -255,7 +253,8 @@ namespace Discord_Nitro_BruteForce
                 email = lines[2];
                 myemail = lines[3];
                 smtpserver = lines[4];
-            }catch(Exception e)
+            }
+            catch(Exception e)
             {
                 Console.WriteLine(e);
             }
