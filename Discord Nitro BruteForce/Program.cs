@@ -22,6 +22,7 @@ namespace Discord_Nitro_BruteForce
         static bool work = false;
         static ProxyQueue proxies;
         static int proxyType;
+        public static bool verbose = false;
 
         public static bool emailnotification = false;
         static string username;
@@ -34,7 +35,10 @@ namespace Discord_Nitro_BruteForce
         static void Main(string[] args)
         {
 
-            Thread counter = new Thread(new ThreadStart(setTitle));
+            Thread counter = new Thread(setTitle)
+            {
+                IsBackground = false
+            };
             counter.Start();
 
             int threads;
@@ -42,7 +46,7 @@ namespace Discord_Nitro_BruteForce
             Console.Write("Enter count of threads: ");
             try
             {
-                threads = Convert.ToInt32(Console.ReadLine().Trim());
+                threads = int.Parse(Console.ReadLine().Trim());
             }
             catch
             {
@@ -130,6 +134,11 @@ namespace Discord_Nitro_BruteForce
                     File.WriteAllText("email.cfg", string.Join("\r\n", new[] { username, password, email, myemail, smtpserver }));
                 }
             }
+
+            Console.Write("Show bad/error codes? (y/n): ");
+            verbose = Console.ReadLine().ToLower().Trim() == "y";
+
+            Console.Clear();
 
             work = true;
 

