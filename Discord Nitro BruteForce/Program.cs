@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Net.Mail;
 using Leaf.xNet;
+using System.ComponentModel;
 
 namespace Discord_Nitro_BruteForce
 {
@@ -21,7 +23,15 @@ namespace Discord_Nitro_BruteForce
         static string[] proxies;
         static int proxyType;
         static bool verbose = false;
-        
+
+        static bool emailnotification = false;
+        static string username;
+        static string password;
+        static string myemail;
+        static string email;
+        static string smtpserver;
+
+        static string loginpath;
 
         [STAThread]
         static void Main(string[] args)
@@ -86,10 +96,48 @@ namespace Discord_Nitro_BruteForce
             proxies = File.ReadAllLines(proxyPath);
             Console.WriteLine($"Loaded {proxies.Length} proxies");
 
-            Console.Write("Use verbose mode? (y/n): ");
+            Console.WriteLine("Use verbose mode? (y/n): ");
             if (Console.ReadLine().ToLower().Trim() == "y")
                 verbose = true;
-            
+
+            Console.Write("Use email notification? (y/n)");
+            if (Console.ReadLine().ToLower().Trim() == "y")
+            {
+                emailnotification = true;
+
+                Console.Write("Enter file path? (y/n)");
+                if (Console.ReadLine().ToLower().Trim() == "y")
+                {
+                    dialog.Filter = "Auth file (*.txt)|*.txt";
+
+                    if (dialog.ShowDialog() != DialogResult.OK)
+                    {
+                        return;
+                    }
+
+                    loginpath = dialog.FileName;
+
+                    LoginParse();
+                    
+                    Console.WriteLine("File loaded!");
+
+                    SendEmail("I'm only testing bro", "Test email!");
+                }
+                else
+                {
+                    Console.WriteLine("Enter smtp server: ");
+                    smtpserver = Console.ReadLine();
+                    Console.WriteLine("Enter username: ");
+                    username = Console.ReadLine();
+                    Console.WriteLine("Enter password: ");
+                    password = Console.ReadLine();
+                    Console.WriteLine("Enter email: ");
+                    myemail = Console.ReadLine();
+                    Console.WriteLine("Enter target email: ");
+                    email = Console.ReadLine();
+                }
+            }
+
             work = true;
 
             List<Thread> workers = new List<Thread>();
@@ -154,6 +202,8 @@ namespace Discord_Nitro_BruteForce
                     {
                         File.WriteAllText("good.txt", goods);
 
+                        if(emailnotification == true)
+                            SendEmail(goods, "Hey! I founded!");
                     }
                     catch (FileNotFoundException)
                     {
@@ -196,10 +246,8 @@ namespace Discord_Nitro_BruteForce
         }
 
         static ProxyClient getNewProxy()
-        {
-            
-
-            string fullP = proxies[random.Next(0, proxies.Length - 1)];
+        {           
+            string fullP = proxies[random.Next(0, proxies.Length - 1)];//nice method :p
                 
             switch (proxyType)
                 {
@@ -238,6 +286,40 @@ namespace Discord_Nitro_BruteForce
                 }
 
                 Console.Title = $"DNBF - {text}";
+            }
+        }
+
+        static void SendEmail(string context, string subject)
+        {
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient(smtpserver);
+
+            mail.From = new MailAddress(myemail);
+            mail.To.Add(email);
+            mail.Subject = subject;
+            mail.Body = context;
+
+            SmtpServer.Port = 587;
+            SmtpServer.Credentials = new System.Net.NetworkCredential(username, password);
+            SmtpServer.EnableSsl = true;
+
+            SmtpServer.Send(mail);
+        }
+
+        static void LoginParse()
+        {
+            var lines = File.ReadAllLines(loginpath);
+
+            try
+            {
+                username = lines[0];
+                password = lines[1];
+                email = lines[2];
+                myemail = lines[3];
+                smtpserver = lines[4];
+            }catch(Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
     }
