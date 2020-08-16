@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Net.Mail;
 using Leaf.xNet;
 using System.ComponentModel;
 using System.CodeDom;
 using System.Collections.Concurrent;
+using System.Data.Common;
 
 namespace Discord_Nitro_BruteForce
 {
@@ -23,6 +23,8 @@ namespace Discord_Nitro_BruteForce
         static ProxyQueue proxies;
         static int proxyType;
         public static bool verbose = false;
+
+        static int threads;
 
         public static bool emailnotification = false;
         static string username;
@@ -41,102 +43,75 @@ namespace Discord_Nitro_BruteForce
             };
             counter.Start();
 
-            int threads;
-
-            Console.Write("Enter count of threads: ");
-            try
+            if (!File.Exists("config.cfg"))
             {
-                threads = int.Parse(Console.ReadLine().Trim());
+                Console.Write("Enter count of threads: ");
+                try
+                {
+                    threads = int.Parse(Console.ReadLine().Trim());
+                }
+                catch
+                {
+                    Console.WriteLine("Unknown threads count. Using 100");
+                    threads = 100;
+                }
+
+                while (true)
+                {
+
+                    Console.WriteLine("Select proxy type:\r\n1. Http/s\r\n2. Socks4\r\n3. Socks5");
+                    Console.Write("Your choice: ");
+                    ConsoleKey k = Console.ReadKey().Key;
+                    Console.WriteLine();
+                    if (k == ConsoleKey.D1)
+                    {
+                        Console.WriteLine("Selected Http/s type of proxy");
+                        proxyType = 1;
+                        break;
+                    }
+                    else if (k == ConsoleKey.D2)
+                    {
+                        Console.WriteLine("Selected Socks4 type of proxy");
+                        proxyType = 2;
+                        break;
+                    }
+                    else if (k == ConsoleKey.D3)
+                    {
+                        Console.WriteLine("Selected Socks5 type of proxy");
+                        proxyType = 3;
+                        break;
+                    }
+                    Console.Clear();
+                }
+
+                Console.Write("Path to proxy list: ");
+
+                string proxyPath = Console.ReadLine().Replace("\"", "").Trim();
+
+                proxies = new ProxyQueue(File.ReadAllLines(proxyPath));
+                Console.WriteLine($"Loaded {proxies.Length} proxies");
+
+                Console.Write("Use email notification? (y/n): ");
+                emailnotification = Console.ReadLine().ToLower().Trim() == "y";
+
+                Console.Write("Show bad/error codes? (y/n): ");
+                verbose = Console.ReadLine().ToLower().Trim() == "y";
+
+                File.WriteAllText("config.cfg", string.Join("\r\n", new[] { threads.ToString(), proxyPath, proxyType.ToString(), emailnotification.ToString(), verbose.ToString() }));
             }
-            catch
+            else
             {
-                Console.WriteLine("Unknown threads count. Using 100");
-                threads = 100;
-            }
-
-            while (true)
-            {
-
-                Console.WriteLine("Select proxy type:\r\n1. Http/s\r\n2. Socks4\r\n3. Socks5");
-                Console.Write("Your choice: ");
-                ConsoleKey k = Console.ReadKey().Key;
-                Console.WriteLine();
-                if (k == ConsoleKey.D1)
-                {
-                    Console.WriteLine("Selected Http/s type of proxy");
-                    proxyType = 1;
-                    break;
-                }
-                else if (k == ConsoleKey.D2)
-                {
-                    Console.WriteLine("Selected Socks4 type of proxy");
-                    proxyType = 2;
-                    break; 
-                }
-                else if (k == ConsoleKey.D3)
-                {
-                    Console.WriteLine("Selected Socks5 type of proxy");
-                    proxyType = 3;
-                    break;
-                }
-                Console.Clear();
-            }
-
-            Console.WriteLine("Open file with proxy list");
-
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Proxy list (*.txt)|*.txt";
-
-            if (dialog.ShowDialog() != DialogResult.OK)
-            {
-                return;
-            }
-
-            string proxyPath = dialog.FileName;
-
-            proxies = new ProxyQueue(File.ReadAllLines(proxyPath));
-            Console.WriteLine($"Loaded {proxies.Length} proxies");
-
-            Console.Write("Use email notification? (y/n): ");
-            if (Console.ReadLine().ToLower().Trim() == "y")
-            {
-                emailnotification = true;
-
-                bool cfgLoad = false;
-
-                if (File.Exists("email.cfg"))
-                {
-                    Console.Write("Use saved email config? (y/n): ");
-                    cfgLoad = Console.ReadLine().ToLower().Trim() == "y";
-                }
-
-                if (cfgLoad)
-                {
-                    LoginParse();
-                    
-                    Console.WriteLine("File loaded!");
-
-                    SendEmail("I'm only testing bro", "Test email!");
-                }
-                else
-                {
-                    Console.WriteLine("Enter smtp server: ");
-                    smtpserver = Console.ReadLine();
-                    Console.WriteLine("Enter username: ");
-                    username = Console.ReadLine();
-                    Console.WriteLine("Enter password: ");
-                    password = Console.ReadLine();
-                    Console.WriteLine("Enter email: ");
-                    myemail = Console.ReadLine();
-                    Console.WriteLine("Enter target email: ");
-                    email = Console.ReadLine();
-
-                    File.WriteAllText("email.cfg", string.Join("\r\n", new[] { username, password, email, myemail, smtpserver }));
-                }
+                string[] cfg = File.ReadAllLines("config.cfg");
+                threads = int.Parse(cfg[0]);
+                proxies = new ProxyQueue(File.ReadAllLines(cfg[1]));
+                Console.WriteLine($"Loaded {proxies.Length} proxies");
+                proxyType = int.Parse(cfg[2]);
+                emailnotification = bool.Parse(cfg[3]);
+                verbose = bool.Parse(cfg[4]);
             }
 
-            Console.Write("Show bad/error codes? (y/n): ");
-            verbose = Console.ReadLine().ToLower().Trim() == "y";
+            if (emailnotification)
+                loadEmail();
 
             Console.Clear();
 
@@ -167,6 +142,43 @@ namespace Discord_Nitro_BruteForce
 
             Console.WriteLine("All threads stopped!");
             Console.ReadKey();
+        }
+
+        static void loadEmail()
+        {
+            emailnotification = true;
+
+            bool cfgLoad = false;
+
+            if (File.Exists("email.cfg"))
+            {
+                Console.Write("Use saved email config? (y/n): ");
+                cfgLoad = Console.ReadLine().ToLower().Trim() == "y";
+            }
+
+            if (cfgLoad)
+            {
+                LoginParse();
+
+                Console.WriteLine("File loaded!");
+
+                SendEmail("I'm only testing bro", "Test email!");
+            }
+            else
+            {
+                Console.WriteLine("Enter smtp server: ");
+                smtpserver = Console.ReadLine();
+                Console.WriteLine("Enter username: ");
+                username = Console.ReadLine();
+                Console.WriteLine("Enter password: ");
+                password = Console.ReadLine();
+                Console.WriteLine("Enter email: ");
+                myemail = Console.ReadLine();
+                Console.WriteLine("Enter target email: ");
+                email = Console.ReadLine();
+
+                File.WriteAllText("email.cfg", string.Join("\r\n", new[] { username, password, email, myemail, smtpserver }));
+            }
         }
 
         static void Worker()
