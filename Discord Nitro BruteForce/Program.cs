@@ -75,6 +75,7 @@ namespace Discord_Nitro_BruteForce
                         break;
                     }
                     Console.Clear();
+                    Console.Title = "DNBF - work";
                 }
 
                 Console.Write("Path to proxy list: ");
@@ -227,15 +228,21 @@ namespace Discord_Nitro_BruteForce
 
         static void setTitle()
         {
+            string state;
+            string text;
+
             while (true)
             {
-                string text = "idle";
-                if (work)
-                {
-                    text = $"work Checked: {ch}, Hits: {goods}";
-                }
+                state = work ? "work": "idle";
+                text = work ? $"Checked: {ch}, Hits: {goods}" : string.Empty;
 
-                Console.Title = $"DNBF - {text}";
+                if(verbose) 
+                    Console.Title = $"DNBF - {state} {text}";
+                else
+                {
+                    Console.SetCursorPosition(0, 0);
+                    Console.WriteLine(text);
+                }
             }
         }
 
