@@ -1,16 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Net.Mail;
 using Leaf.xNet;
-using System.ComponentModel;
-using System.CodeDom;
-using System.Collections.Concurrent;
-using System.Data.Common;
 
 namespace Discord_Nitro_BruteForce
 {
