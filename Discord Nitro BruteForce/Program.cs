@@ -148,7 +148,7 @@ namespace Discord_Nitro_BruteForce
             if (skip)
                 cfgLoad = true;
 
-            if (File.Exists("email.cfg") && skip == false)
+            if (File.Exists("email.cfg") && !skip)
             {
                 Console.Write("Use saved email config? (y/n): ");
                 cfgLoad = Console.ReadLine().ToLower().Trim() == "y";
