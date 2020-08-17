@@ -92,6 +92,9 @@ namespace Discord_Nitro_BruteForce
                 verbose = Console.ReadLine().ToLower().Trim() == "y";
 
                 File.WriteAllText("config.cfg", string.Join("\r\n", new[] { threads.ToString(), proxyPath, proxyType.ToString(), emailnotification.ToString(), verbose.ToString() }));
+
+                if (emailnotification)
+                    loadEmail(false);
             }
             else
             {
@@ -102,10 +105,10 @@ namespace Discord_Nitro_BruteForce
                 proxyType = int.Parse(cfg[2]);
                 emailnotification = bool.Parse(cfg[3]);
                 verbose = bool.Parse(cfg[4]);
-            }
 
-            if (emailnotification)
-                loadEmail();
+                if (emailnotification)
+                    loadEmail(true);
+            }
 
             Console.Clear();
 
@@ -138,11 +141,14 @@ namespace Discord_Nitro_BruteForce
             Console.ReadKey();
         }
 
-        static void loadEmail()
+        static void loadEmail(bool skip)
         {
             bool cfgLoad = false;
 
-            if (File.Exists("email.cfg"))
+            if (skip)
+                cfgLoad = true;
+
+            if (File.Exists("email.cfg") && skip == false)
             {
                 Console.Write("Use saved email config? (y/n): ");
                 cfgLoad = Console.ReadLine().ToLower().Trim() == "y";
@@ -170,6 +176,8 @@ namespace Discord_Nitro_BruteForce
                 email = Console.ReadLine();
 
                 File.WriteAllText("email.cfg", string.Join("\r\n", new[] { username, password, email, myemail, smtpserver }));
+
+                SendEmail("I'm only testing bro", "Test email!");
             }
         }
 
@@ -261,6 +269,8 @@ namespace Discord_Nitro_BruteForce
                 SmtpServer.EnableSsl = true;
 
                 SmtpServer.Send(mail);
+
+                Console.WriteLine("Email sended!");
             }
         }
 
