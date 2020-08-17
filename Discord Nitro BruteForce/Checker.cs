@@ -50,7 +50,7 @@ namespace Discord_Nitro_BruteForce
 
                 lock (fileLocker)
                 {
-                    File.AppendAllText("good.txt", code);
+                    File.AppendAllText("good.txt", code + $" (StatusCode: {(int)res.StatusCode})\r\n");
                 }
 
                 if (Program.emailnotification)

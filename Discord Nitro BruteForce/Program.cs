@@ -17,6 +17,8 @@ namespace Discord_Nitro_BruteForce
         static int proxyType;
         public static bool verbose = false;
 
+        public static object randomSync = new object();
+
         static int threads;
 
         public static bool emailnotification = false;
@@ -220,7 +222,8 @@ namespace Discord_Nitro_BruteForce
 
             for(int i = 0; i < 16; i++)
             {
-                code += dict[random.Next(0, dict.Length - 1)];
+                lock(randomSync)
+                    code += dict[random.Next(0, dict.Length - 1)];
             }
 
             return code;
@@ -233,6 +236,7 @@ namespace Discord_Nitro_BruteForce
 
             while (true)
             {
+                Thread.Sleep(250);
                 state = work ? "work": "idle";
                 text = work ? $"Checked: {ch}, Hits: {goods}" : string.Empty;
 
