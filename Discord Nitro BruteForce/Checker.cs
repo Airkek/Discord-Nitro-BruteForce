@@ -8,6 +8,9 @@ namespace Discord_Nitro_BruteForce
     class Checker
     {
         static object fileLocker = new object();
+
+        static string getWumpCode(string code) => $"WUMP-{code[0]}{code[1]}{code[2]}{code[3]}{code[4]}-{code[5]}{code[6]}{code[7]}{code[8]}{code[9]}-{code[10]}{code[11]}{code[12]}{code[13]}{code[14]}";
+        
         public static void Check(string code, ProxyClient proxy)
         {
             using (HttpRequest req = new HttpRequest()
@@ -46,15 +49,18 @@ namespace Discord_Nitro_BruteForce
                 Console.ForegroundColor = ConsoleColor.Green;
                 if(!Program.verbose)
                     Console.SetCursorPosition(0, 5 + Program.goods);
-                Console.WriteLine($"[+] {code} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
+
+                string wump = getWumpCode(code);
+
+                Console.WriteLine($"[+] {wump} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
 
                 lock (fileLocker)
                 {
-                    File.AppendAllText("good.txt", code + $" (StatusCode: {(int)res.StatusCode})\r\n");
+                    File.AppendAllText("good.txt", wump + $" (StatusCode: {(int)res.StatusCode})\r\n");
                 }
 
                 if (Program.emailnotification)
-                    Program.SendEmail(code, "Hey! I founded valid code!");
+                    Program.SendEmail(wump, "Hey! I founded valid code!");
                 //}
             }
         }

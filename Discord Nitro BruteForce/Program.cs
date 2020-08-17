@@ -218,7 +218,7 @@ namespace Discord_Nitro_BruteForce
             string code = "";
             string dict = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 
-            for(int i = 0; i < 16; i++)
+            for(int i = 0; i < 15; i++)
             {
                 lock(randomSync)
                     code += dict[random.Next(0, dict.Length - 1)];
