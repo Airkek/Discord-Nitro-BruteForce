@@ -142,8 +142,6 @@ namespace Discord_Nitro_BruteForce
 
         static void loadEmail()
         {
-            emailnotification = true;
-
             bool cfgLoad = false;
 
             if (File.Exists("email.cfg"))
@@ -252,19 +250,22 @@ namespace Discord_Nitro_BruteForce
 
         public static void SendEmail(string context, string subject)
         {
-            MailMessage mail = new MailMessage();
-            SmtpClient SmtpServer = new SmtpClient(smtpserver);
+            if (emailnotification)
+            {
+                MailMessage mail = new MailMessage();
+                SmtpClient SmtpServer = new SmtpClient(smtpserver);
 
-            mail.From = new MailAddress(myemail);
-            mail.To.Add(email);
-            mail.Subject = subject;
-            mail.Body = context;
+                mail.From = new MailAddress(myemail);
+                mail.To.Add(email);
+                mail.Subject = subject;
+                mail.Body = context;
 
-            SmtpServer.Port = 587;
-            SmtpServer.Credentials = new System.Net.NetworkCredential(username, password);
-            SmtpServer.EnableSsl = true;
+                SmtpServer.Port = 587;
+                SmtpServer.Credentials = new System.Net.NetworkCredential(username, password);
+                SmtpServer.EnableSsl = true;
 
-            SmtpServer.Send(mail);
+                SmtpServer.Send(mail);
+            }
         }
 
         static void LoginParse()
