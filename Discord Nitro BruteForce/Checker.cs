@@ -21,47 +21,51 @@ namespace Discord_Nitro_BruteForce
             {
                 HttpResponse res = req.Get($"https://discordapp.com/api/v6/entitlements/gift-codes/{code}");
 
-                if(res.StatusCode == HttpStatusCode.TooManyRequests || res.StatusCode == HttpStatusCode.Forbidden)
+                switch (res.StatusCode)
                 {
-                    if (Program.verbose)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine($"[-] {code}: {res.StatusCode}");
-                    }
-                    throw new HttpException();
+                    case HttpStatusCode.TooManyRequests:
+                    case HttpStatusCode.Forbidden:
+                    case HttpStatusCode.BadRequest:
+                        {
+                            if (Program.verbose)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Yellow;
+                                Console.WriteLine($"[-] {code}: {res.StatusCode}");
+                            }
+                            throw new HttpException();
+                        }
+
+                    case HttpStatusCode.NotFound:
+                        {
+                            if (Program.verbose)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine($"[-] {code}");
+                            }
+                            return;
+                        }
+
+                    default:
+                        {
+                            Interlocked.Increment(ref Program.goods);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            if (!Program.verbose)
+                                Console.SetCursorPosition(0, 5 + Program.goods);
+
+                            string wump = getWumpCode(code);
+
+                            Console.WriteLine($"[+] {wump} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
+
+                            lock (fileLocker)
+                            {
+                                File.AppendAllText("good.txt", wump + $" (StatusCode: {(int)res.StatusCode})\r\n");
+                            }
+
+                            if (Program.emailnotification)
+                                Program.SendEmail(wump, "Hey! I founded valid code!");
+                            return;
+                        }
                 }
-                    
-                Interlocked.Increment(ref Program.ch);
-
-                if(res.StatusCode == HttpStatusCode.NotFound)
-                {
-                    if (Program.verbose)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"[-] {code}");
-                    }
-                    return;
-                }
-
-                //if (res.StatusCode == HttpStatusCode.OK || res.StatusCode == HttpStatusCode.Found || res.StatusCode == HttpStatusCode.Accepted)
-                //{
-                Interlocked.Increment(ref Program.goods);
-                Console.ForegroundColor = ConsoleColor.Green;
-                if(!Program.verbose)
-                    Console.SetCursorPosition(0, 5 + Program.goods);
-
-                string wump = getWumpCode(code);
-
-                Console.WriteLine($"[+] {wump} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
-
-                lock (fileLocker)
-                {
-                    File.AppendAllText("good.txt", wump + $" (StatusCode: {(int)res.StatusCode})\r\n");
-                }
-
-                if (Program.emailnotification)
-                    Program.SendEmail(wump, "Hey! I founded valid code!");
-                //}
             }
         }
     }
