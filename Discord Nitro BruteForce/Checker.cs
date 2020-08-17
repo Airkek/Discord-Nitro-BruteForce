@@ -37,6 +37,7 @@ namespace Discord_Nitro_BruteForce
 
                     case HttpStatusCode.NotFound:
                         {
+                            Interlocked.Increment(ref Program.ch);
                             if (Program.verbose)
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
@@ -47,6 +48,7 @@ namespace Discord_Nitro_BruteForce
 
                     default:
                         {
+                            Interlocked.Increment(ref Program.ch);
                             Interlocked.Increment(ref Program.goods);
                             Console.ForegroundColor = ConsoleColor.Green;
                             if (!Program.verbose)
