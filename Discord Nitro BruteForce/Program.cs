@@ -238,6 +238,8 @@ namespace Discord_Nitro_BruteForce
                 state = work ? "work": "idle";
                 text = work ? $"Checked: {ch}, Hits: {goods}" : string.Empty;
 
+                while (!work) { }
+
                 if(verbose) 
                     Console.Title = $"DNBF - {state} {text}";
                 else
