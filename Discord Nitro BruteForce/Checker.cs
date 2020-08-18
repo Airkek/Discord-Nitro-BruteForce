@@ -23,6 +23,7 @@ namespace Discord_Nitro_BruteForce
 
                 switch (res.StatusCode)
                 {
+                    case HttpStatusCode.InternalServerError:
                     case HttpStatusCode.TooManyRequests:
                     case HttpStatusCode.Forbidden:
                     case HttpStatusCode.BadRequest:
