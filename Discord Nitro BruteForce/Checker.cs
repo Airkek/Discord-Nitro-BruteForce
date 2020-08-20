@@ -53,12 +53,13 @@ namespace Discord_Nitro_BruteForce
                         {
                             Interlocked.Increment(ref Program.ch);
                             Interlocked.Increment(ref Program.goods);
-                            Console.ForegroundColor = ConsoleColor.Green;
+
                             if (!Program.verbose)
                                 Console.SetCursorPosition(0, 5 + Program.goods);
 
                             string wump = getWumpCode(code);
 
+                            Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"[+] {wump} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
 
                             lock (fileLocker)
