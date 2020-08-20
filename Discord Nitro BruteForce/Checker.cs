@@ -21,22 +21,24 @@ namespace Discord_Nitro_BruteForce
             {
                 HttpResponse res = req.Get($"https://discordapp.com/api/v6/entitlements/gift-codes/{code}");
 
-                switch (res.StatusCode)
+                switch ((int)res.StatusCode)
                 {
-                    case HttpStatusCode.InternalServerError:
-                    case HttpStatusCode.TooManyRequests:
-                    case HttpStatusCode.Forbidden:
-                    case HttpStatusCode.BadRequest:
+                    case 500:
+                    case 429:
+                    case 403:
+                    case 400:
+                    case 502:
+                    case 409:
                         {
                             if (Program.verbose)
                             {
                                 Console.ForegroundColor = ConsoleColor.Yellow;
-                                Console.WriteLine($"[-] {code}: {res.StatusCode}");
+                                Console.WriteLine($"[-] {code}: {res.StatusCode} ({(int)res.StatusCode})");
                             }
                             throw new HttpException();
                         }
 
-                    case HttpStatusCode.NotFound:
+                    case 404:
                         {
                             Interlocked.Increment(ref Program.ch);
                             if (Program.verbose)
