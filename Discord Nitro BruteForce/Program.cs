@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Net.Mail;
 using Leaf.xNet;
+using Newtonsoft.Json;
 
 namespace Discord_Nitro_BruteForce
 {
@@ -196,10 +197,15 @@ namespace Discord_Nitro_BruteForce
                 {
                     continue;
                 }
+                catch (JsonReaderException)
+                {
+                    continue;
+                }
                 catch(Exception e)
                 {
                     Console.WriteLine(e);
                 }
+
                 code = GenerateCode();
             }
         }

