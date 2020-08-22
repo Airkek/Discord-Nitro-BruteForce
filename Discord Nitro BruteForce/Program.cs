@@ -191,11 +191,8 @@ namespace Discord_Nitro_BruteForce
             {
                 try
                 {
-                    Checker.Check(code, getNewProxy());
-                }
-                catch (HttpException)
-                {
-                    continue;
+                    if (!Checker.Check(code, getNewProxy()))
+                        continue;
                 }
                 catch(Exception e)
                 {
