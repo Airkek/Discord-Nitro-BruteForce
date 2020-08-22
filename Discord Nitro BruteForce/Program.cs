@@ -32,7 +32,6 @@ namespace Discord_Nitro_BruteForce
         [STAThread]
         static void Main(string[] args)
         {
-
             Thread counter = new Thread(setTitle)
             {
                 IsBackground = false
@@ -54,7 +53,6 @@ namespace Discord_Nitro_BruteForce
 
                 while (true)
                 {
-
                     Console.WriteLine("Select proxy type:\r\n1. Http/s\r\n2. Socks4\r\n3. Socks5");
                     Console.Write("Your choice: ");
                     ConsoleKey k = Console.ReadKey().Key;
