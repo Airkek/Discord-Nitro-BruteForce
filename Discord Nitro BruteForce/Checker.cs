@@ -15,7 +15,6 @@ namespace Discord_Nitro_BruteForce
         {
             using (HttpRequest req = new HttpRequest()
             {
-                IgnoreProtocolErrors = true,
                 Proxy = proxy
             })
             {
