@@ -19,7 +19,6 @@ namespace Discord_Nitro_BruteForce
                 Proxy = proxy
             })
             {
-
                 try
                 {
                     req.Get($"https://discordapp.com/api/v8/entitlements/gift-codes/{code}?with_application=false&with_subscription_plan=true");
@@ -59,7 +58,6 @@ namespace Discord_Nitro_BruteForce
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"[-] {code}");
                     }
-
                 }
 
                 Interlocked.Increment(ref Program.ch);
