@@ -9,7 +9,7 @@ namespace Discord_Nitro_BruteForce
     {
         static object fileLocker = new object();
 
-        static string getWumpCode(string code) => $"WUMP-{code[0]}{code[1]}{code[2]}{code[3]}{code[4]}-{code[5]}{code[6]}{code[7]}{code[8]}{code[9]}-{code[10]}{code[11]}{code[12]}{code[13]}{code[14]}";
+        static string getWumpCode(string code) => code; //TODO
         
         public static bool Check(string code, ProxyClient proxy)
         {
