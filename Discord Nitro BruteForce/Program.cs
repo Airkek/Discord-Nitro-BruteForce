@@ -18,8 +18,6 @@ namespace Discord_Nitro_BruteForce
         static int proxyType;
         public static bool verbose = false;
 
-        public static object randomSync = new object();
-
         static int threads;
 
         public static bool emailnotification = false;
@@ -120,7 +118,7 @@ namespace Discord_Nitro_BruteForce
             for (int i = 0; i < threads; i++)
             {
                 Thread t = new Thread(Worker);
-                t.Start();
+                t.Start(random.Next());
                 workers.Add(t);
             }
 
@@ -182,9 +180,10 @@ namespace Discord_Nitro_BruteForce
             }
         }
 
-        static void Worker()
+        static void Worker(object seed)
         {
-            string code = GenerateCode();
+            Random random = new Random((int)seed);
+            string code = GenerateCode(random);
             while (work)
             {
                 try
@@ -197,7 +196,7 @@ namespace Discord_Nitro_BruteForce
                     Console.WriteLine(e);
                 }
 
-                code = GenerateCode();
+                code = GenerateCode(random);
             }
         }
 
@@ -218,7 +217,7 @@ namespace Discord_Nitro_BruteForce
             }
         }
 
-        static string GenerateCode()
+        static string GenerateCode(Random random)
         {
             string code = "";
 
@@ -226,8 +225,7 @@ namespace Discord_Nitro_BruteForce
 
             for(int i = 0; i < 24; i++)
             {
-                lock(randomSync)
-                    code += dict[random.Next(0, dict.Length - 1)];
+                code += dict[random.Next(0, dict.Length - 1)];
             }
 
             return code;
