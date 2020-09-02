@@ -30,6 +30,8 @@ namespace Discord_Nitro_BruteForce
         [STAThread]
         static void Main(string[] args)
         {
+            Console.Title = "Discord Nitro BruteForce by Keijia";
+
             Thread counter = new Thread(setTitle)
             {
                 IsBackground = false
@@ -190,6 +192,10 @@ namespace Discord_Nitro_BruteForce
                 {
                     if (!Checker.Check(code, getNewProxy()))
                         continue;
+                }
+                catch (HttpException)
+                {
+                    continue;
                 }
                 catch(Exception e)
                 {
